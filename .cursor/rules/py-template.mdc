@@ -1,0 +1,20 @@
+---
+description: Core conventions for the py-template project (uv, src/common, imports)
+alwaysApply: true
+---
+
+# py-template AI 작업 규칙
+
+- 이 프로젝트는 **uv 기반**입니다.
+  - 가상환경과 의존성 관리는 `pyproject.toml` + `uv.lock` + `uv sync`를 기준으로 합니다.
+  - 새 명령은 가능하면 `uv run ...` 형태로 제안합니다.
+
+- 코드 구조와 임포트:
+  - 애플리케이션 코드는 `src/` 아래에 두고, 공용 유틸은 `src/common/` 패키지로 둡니다.
+  - 어디서든 `import common.logger`, `from common.load_config import load_config` 처럼 **패키지 임포트**를 사용합니다.
+  - `sys.path`를 직접 수정하거나 `.pth` 파일을 새로 만드는 방식은 제안하지 않습니다.
+
+- 기존 스크립트와 문서:
+  - `scripts/setup/` 아래의 스크립트와 `Makefile` 타깃은 과거 pip/requirements 기반 플로우를 포함할 수 있습니다.
+  - 새로운 변경을 제안할 때는 먼저 `README.md`와 `ARCHITECTURE.md`를 읽고, 현재 의도된 흐름(uv, src/common 패키지 구조)에 맞게 조정합니다.
+

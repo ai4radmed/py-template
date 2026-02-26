@@ -1,0 +1,30 @@
+# .gitignore – Python template
+
+# Python
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+*.code-workspace
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# dotenv
+.env
+!.env.example
+
+# Data
+data/
+
+# Logs
+logs/
+*.log
+
+# General
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
