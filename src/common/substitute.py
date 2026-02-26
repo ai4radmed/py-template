@@ -10,6 +10,16 @@
 
 import os
 
+
+def substitute_env_str(value: str) -> str:
+    """문자열 내 ${VAR} 패턴을 os.environ 값으로 치환."""
+    if not isinstance(value, str):
+        return value
+    for k, v in os.environ.items():
+        value = value.replace(f"${{{k}}}", v)
+    return value
+
+
 def substitute_env(value):
     """
     재귀적으로 환경변수 치환을 수행하는 함수.
@@ -36,9 +46,7 @@ def substitute_env(value):
 
     # 문자열 처리
     if isinstance(value, str):
-        for k, v in os.environ.items():
-            value = value.replace(f"${{{k}}}", v)
-        return value
+        return substitute_env_str(value)
 
     # 딕셔너리 처리 (재귀)
     if isinstance(value, dict):

@@ -28,3 +28,5 @@ logs/
 Thumbs.db
 *.swp
 .idea/
+.ruff_cache/
+reports/

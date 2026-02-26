@@ -13,17 +13,19 @@
   - 2025-08-12: 새로 생성 (BenKorea)
 """
 
+import logging
+import logging.config
 import os
 import re
 import socket
-import logging
-import logging.config
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any
 
 import yaml
 from dotenv import load_dotenv
+
+from common.substitute import substitute_env, substitute_env_str
 
 load_dotenv(override=True)
 
@@ -35,31 +37,6 @@ def _get_log_level() -> str:
     """ENV LOG_LEVEL을 대문자로 읽어 유효성 검사 후 반환."""
     level = os.getenv("LOG_LEVEL", "INFO").upper()
     return level if level in VALID_LEVELS else "INFO"
-
-
-def _expand_env_placeholders(value: str) -> str:
-    """문자열 내 ${VAR}/$VAR 환경변수 치환 (PROJECT_NAME, LOG_PATH 우선)."""
-    if not isinstance(value, str):
-        return value
-    value = value.replace("${PROJECT_NAME}", PROJECT_NAME).replace("$PROJECT_NAME", PROJECT_NAME)
-    value = value.replace("{PROJECT_NAME}", PROJECT_NAME)
-    log_path = os.getenv("LOG_PATH", "")
-    value = value.replace("${LOG_PATH}", log_path).replace("$LOG_PATH", log_path)
-    return os.path.expandvars(value)
-
-
-def _expand_env_any(obj: Any) -> Any:
-    """
-    YAML 전체(딕셔너리 키/값, 리스트 요소, 문자열)에 대해
-    환경변수 치환을 재귀적으로 수행.
-    """
-    if isinstance(obj, dict):
-        return {_expand_env_any(k): _expand_env_any(v) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [_expand_env_any(x) for x in obj]
-    if isinstance(obj, str):
-        return _expand_env_placeholders(obj)
-    return obj
 
 
 def _require_parent_exists_and_writable(path: Path, handler_name: str) -> None:
@@ -123,11 +100,11 @@ def _load_logging_config() -> dict:
     if not yaml_path.exists():
         raise FileNotFoundError(f"logging.yml 파일이 필요합니다: {yaml_path}")
 
-    with open(yaml_path, "r", encoding="utf-8") as f:
+    with open(yaml_path, encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     # 0) YAML 전역(키/값) ENV 치환
-    config = _expand_env_any(config)
+    config = substitute_env(config)
 
     # 1) LOG_LEVEL 일괄 오버라이드
     level = _get_log_level()
@@ -146,11 +123,10 @@ def _load_logging_config() -> dict:
             raw_filename = handler_cfg.get("filename", "")
             if not raw_filename:
                 raise ValueError(f"[{handler_name}] filename이 지정되어 있지 않습니다.")
-            expanded = _expand_env_placeholders(raw_filename)
+            expanded = os.path.expandvars(substitute_env_str(raw_filename))
             if expanded == raw_filename and ("${" in raw_filename or "$" in raw_filename):
                 raise ValueError(
-                    f"[{handler_name}] 환경변수 치환 실패: {raw_filename}\n"
-                    "- .env의 관련 변수를 확인하세요."
+                    f"[{handler_name}] 환경변수 치환 실패: {raw_filename}\n- .env의 관련 변수를 확인하세요."
                 )
             file_path = Path(expanded)
             _require_parent_exists_and_writable(file_path, handler_name)
@@ -159,7 +135,7 @@ def _load_logging_config() -> dict:
     # 4) audit stdout 금지(정책 점검)
     _assert_audit_is_file_only(config)
 
-    return config
+    return dict(config)
 
 
 def setup_logging() -> None:
@@ -168,7 +144,7 @@ def setup_logging() -> None:
     logging.config.dictConfig(cfg)
 
 
-def get_logger(name: Optional[str] = PROJECT_NAME) -> logging.Logger:
+def get_logger(name: str | None = PROJECT_NAME) -> logging.Logger:
     """
     지정된 이름의 로거 반환. 최초 호출 시 자동으로 setup_logging() 수행.
     기본값은 .env의 PROJECT_NAME.
@@ -179,8 +155,7 @@ def get_logger(name: Optional[str] = PROJECT_NAME) -> logging.Logger:
     return logging.getLogger(name or None)
 
 
-def audit_log(action: str, detail: Optional[Dict[str, Any]] = None,
-              compliance: str = "개인정보보호법 제28조") -> None:
+def audit_log(action: str, detail: dict[str, Any] | None = None, compliance: str = "개인정보보호법 제28조") -> None:
     """
     감사 로그(JSON). 'audit' 로거는 전용 파일에만 기록되어야 함(stdout 금지).
     """
@@ -191,7 +166,7 @@ def audit_log(action: str, detail: Optional[Dict[str, Any]] = None,
         "user": user,
         "process_id": os.getpid(),
         "server_id": socket.gethostname(),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "compliance_check": compliance,
     }
     if detail:
@@ -203,14 +178,18 @@ def audit_log(action: str, detail: Optional[Dict[str, Any]] = None,
 def log_debug(msg: str) -> None:
     get_logger().debug(msg)
 
+
 def log_info(msg: str) -> None:
     get_logger().info(msg)
+
 
 def log_warn(msg: str) -> None:
     get_logger().warning(msg)
 
+
 def log_error(msg: str) -> None:
     get_logger().error(msg)
+
 
 def log_critical(msg: str) -> None:
     get_logger().critical(msg)

@@ -7,8 +7,8 @@
   - 2025-09-24: print(f"[setup_pyenv] ...") 표준 출력 포맷 적용
 """
 
-import subprocess
 import platform
+import subprocess
 from pathlib import Path
 
 
@@ -19,14 +19,14 @@ def main():
     except FileNotFoundError:
         print("[setup-pyenv] .python-version 파일이 없습니다.")
         return
-    
+
     if not version:
         print("[setup-pyenv] .python-version 파일이 비어있습니다.")
         return
-    
+
     # 플랫폼별 pyenv 실행 방식 결정
     system = platform.system().lower()
-    
+
     # pyenv local 실행
     try:
         if system == "windows":
@@ -35,7 +35,7 @@ def main():
         else:
             # Linux/macOS/WSL2: shell=False 권장
             subprocess.run(["pyenv", "local", version], check=True)
-        
+
         print(f"[setup-pyenv] Python {version} 설정 완료")
     except (subprocess.CalledProcessError, FileNotFoundError):
         print(f"[setup-pyenv] 실패 - 수동 실행: pyenv local {version}")

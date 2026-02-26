@@ -1,5 +1,5 @@
 ---
-description: Core conventions for the py-template project (uv, src/common, imports)
+description: Core conventions for the py-template project (uv, src/common, src/adapters, imports)
 alwaysApply: true
 ---
 
@@ -10,11 +10,27 @@ alwaysApply: true
   - 새 명령은 가능하면 `uv run ...` 형태로 제안합니다.
 
 - 코드 구조와 임포트:
-  - 애플리케이션 코드는 `src/` 아래에 두고, 공용 유틸은 `src/common/` 패키지로 둡니다.
-  - 어디서든 `import common.logger`, `from common.load_config import load_config` 처럼 **패키지 임포트**를 사용합니다.
+  - 애플리케이션 코드는 `src/` 아래에 두고, 두 개의 패키지로 분리합니다:
+    - `src/common/` — 핵심 유틸리티 (logger, substitute, load_config)
+    - `src/adapters/` — 외부 시스템 연동 (database, excel_io, get_cipher)
+  - 임포트는 `import common.logger`, `from adapters.database import get_db_connection` 처럼 **패키지 임포트**를 사용합니다.
   - `sys.path`를 직접 수정하거나 `.pth` 파일을 새로 만드는 방식은 제안하지 않습니다.
 
-- 기존 스크립트와 문서:
-  - `scripts/setup/` 아래의 스크립트와 `Makefile` 타깃은 과거 pip/requirements 기반 플로우를 포함할 수 있습니다.
-  - 새로운 변경을 제안할 때는 먼저 `README.md`와 `ARCHITECTURE.md`를 읽고, 현재 의도된 흐름(uv, src/common 패키지 구조)에 맞게 조정합니다.
+- 의존성 분리:
+  - 핵심(core): `python-dotenv`, `pyyaml`만 기본 의존성
+  - 선택적: `db` (psycopg2), `excel` (pandas, openpyxl), `cipher` (ff3)
+  - 개발: `[dependency-groups] dev` — pytest, pytest-html, pytest-cov, allure-pytest, ruff, mypy, pre-commit
 
+- 코드 품질:
+  - ruff (lint + format), mypy (타입 검사)를 사용합니다.
+  - `make lint`, `make format`, `make typecheck`, `make test`로 실행합니다.
+
+- 테스트 및 GS 인증:
+  - 테스트는 `tests/unit/`, `tests/integration/`, `tests/e2e/`로 구분합니다.
+  - GS 인증 마커(`@pytest.mark.gs_req`, `@pytest.mark.gs_category`)를 활용하여 테스트와 인증 요구사항을 매핑합니다.
+  - `make report`로 GS 인증 산출물(HTML 리포트, 커버리지, Allure, JUnit)을 생성합니다.
+  - CI/CD는 `.github/workflows/ci.yml`에서 GitHub Actions로 자동 실행됩니다.
+
+- 기존 스크립트와 문서:
+  - `scripts/setup/` 아래의 스크립트와 `Makefile` 타깃을 참조합니다.
+  - 새로운 변경을 제안할 때는 먼저 `README.md`와 `ARCHITECTURE.md`를 읽고, 현재 의도된 흐름(uv, common + adapters 패키지 구조)에 맞게 조정합니다.

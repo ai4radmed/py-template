@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── 정적 코드 분석 (GS 인증: 신뢰성/유지보수성) ──
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+      - name: Mypy type check
+        run: uv run mypy src/
+
+  # ── 동적 테스트 + 산출물 생성 (GS 인증: 기능 적합성/호환성) ──
+  test:
+    needs: lint
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync --group dev --extra all
+
+      - name: Run tests with coverage and reports
+        run: |
+          uv run pytest \
+            --html=reports/test_report.html --self-contained-html \
+            --cov=src --cov-report=html:reports/coverage --cov-report=xml:reports/coverage.xml \
+            --alluredir=reports/allure-results \
+            --junitxml=reports/junit.xml \
+            -v
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ matrix.os }}
+          path: reports/
+          retention-days: 30

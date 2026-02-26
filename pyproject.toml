@@ -9,21 +9,26 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12.10"
 dependencies = [
-    "et-xmlfile==2.0.0",
-    "iniconfig==2.1.0",
-    "numpy==2.3.3",
-    "openpyxl==3.1.5",
-    "packaging==25.0",
-    "pandas==2.3.2",
-    "pluggy==1.6.0",
-    "pygments==2.19.2",
-    "pytest==8.4.1",
-    "python-dateutil==2.9.0.post0",
-    "python-dotenv==1.1.1",
-    "pytz==2025.2",
-    "pyyaml==6.0.2",
-    "six==1.17.0",
-    "tzdata==2025.2",
+    "python-dotenv>=1.1.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+db = ["psycopg2-binary>=2.9"]
+excel = ["pandas>=2.3", "openpyxl>=3.1"]
+cipher = ["ff3>=1.0"]
+all = ["py-template[db,excel,cipher]"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-html>=4.0",
+    "pytest-cov>=6.0",
+    "allure-pytest>=2.13",
+    "ruff>=0.11",
+    "mypy>=1.10",
+    "types-pyyaml>=6.0",
+    "pre-commit>=4.0",
 ]
 
 [tool.setuptools]
@@ -31,3 +36,42 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["common", "adapters"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "gs_req(req_id): GS 인증 요구사항 ID (예: REQ-SEC-001)",
+    "gs_category(category): GS 인증 평가 항목 (예: 보안성, 신뢰성)",
+    "integration: 통합 테스트 (DB, 파일 등 외부 자원 필요)",
+    "e2e: 종단 간 테스트 (실제 사용자 시나리오)",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["src/*/__init__.py"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 0
+
+[tool.coverage.html]
+directory = "reports/coverage"

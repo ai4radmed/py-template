@@ -6,31 +6,32 @@
   - 2025-09-24: 새로 생성 (BenKorea)
 """
 
-from pathlib import Path
+import getpass
 import os
 import platform
-from dotenv import load_dotenv
-import getpass
 import shutil
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 ROOT = Path.cwd()
-ENV_FILE = ROOT / '.env'
+ENV_FILE = ROOT / ".env"
 if not ENV_FILE.is_file():
     print("[create_logs] .env 파일이 없습니다. 먼저 .env를 복사하세요.")
     exit(1)
 
 load_dotenv(ENV_FILE)
 
-log_path = os.getenv('LOG_PATH')
-project_name = os.getenv('PROJECT_NAME', 'default')
+log_path = os.getenv("LOG_PATH")
+project_name = os.getenv("PROJECT_NAME", "default")
 os_name = platform.system()
 print(f"[create_logs] OS: {os_name}")
 if log_path:
-    log_path = log_path.replace('{PROJECT_NAME}', project_name)
+    log_path = log_path.replace("{PROJECT_NAME}", project_name)
     if os_name == "Windows":
-        log_path = log_path.replace('%USERPROFILE%', os.environ.get('USERPROFILE', ''))
+        log_path = log_path.replace("%USERPROFILE%", os.environ.get("USERPROFILE", ""))
     elif os_name == "Darwin":
-        log_path = log_path.replace('$HOME', os.environ.get('HOME', ''))
+        log_path = log_path.replace("$HOME", os.environ.get("HOME", ""))
 
 print(f"[create_logs] log_path: {log_path}")
 if not log_path:

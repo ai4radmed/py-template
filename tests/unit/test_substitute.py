@@ -10,7 +10,7 @@
 """
 
 import os
-import pytest
+
 from common.substitute import substitute_env
 
 
@@ -19,18 +19,18 @@ class TestSubstituteEnv:
 
     def setup_method(self):
         """각 테스트 전 환경변수 설정"""
-        os.environ['TEST_VAR'] = 'test_value'
-        os.environ['PROJECT_NAME'] = 'py-template'
-        os.environ['LOG_PATH'] = '/var/log/app'
-        os.environ['PORT'] = '8080'
+        os.environ["TEST_VAR"] = "test_value"
+        os.environ["PROJECT_NAME"] = "py-template"
+        os.environ["LOG_PATH"] = "/var/log/app"
+        os.environ["PORT"] = "8080"
 
     def teardown_method(self):
         """각 테스트 후 환경변수 정리"""
-        for key in ['TEST_VAR', 'PROJECT_NAME', 'LOG_PATH', 'PORT']:
+        for key in ["TEST_VAR", "PROJECT_NAME", "LOG_PATH", "PORT"]:
             os.environ.pop(key, None)
 
     # ========== 문자열 치환 테스트 ==========
-    
+
     def test_substitute_simple_string(self):
         """단순 문자열 내 환경변수 치환"""
         result = substitute_env("Value is ${TEST_VAR}")
@@ -60,73 +60,47 @@ class TestSubstituteEnv:
 
     def test_substitute_dict(self):
         """딕셔너리 값 치환"""
-        input_dict = {
-            'name': '${PROJECT_NAME}',
-            'port': '${PORT}',
-            'static': 'no_substitution'
-        }
+        input_dict = {"name": "${PROJECT_NAME}", "port": "${PORT}", "static": "no_substitution"}
         result = substitute_env(input_dict)
-        assert result == {
-            'name': 'py-template',
-            'port': '8080',
-            'static': 'no_substitution'
-        }
+        assert result == {"name": "py-template", "port": "8080", "static": "no_substitution"}
 
     def test_substitute_nested_dict(self):
         """중첩 딕셔너리 재귀 치환"""
-        input_dict = {
-            'app': {
-                'name': '${PROJECT_NAME}',
-                'logging': {
-                    'path': '${LOG_PATH}'
-                }
-            }
-        }
+        input_dict = {"app": {"name": "${PROJECT_NAME}", "logging": {"path": "${LOG_PATH}"}}}
         result = substitute_env(input_dict)
-        assert result['app']['name'] == 'py-template'
-        assert result['app']['logging']['path'] == '/var/log/app'
+        assert result["app"]["name"] == "py-template"
+        assert result["app"]["logging"]["path"] == "/var/log/app"
 
     # ========== 리스트 치환 테스트 ==========
 
     def test_substitute_list(self):
         """리스트 원소 치환"""
-        input_list = ['${PROJECT_NAME}', '${PORT}', 'static']
+        input_list = ["${PROJECT_NAME}", "${PORT}", "static"]
         result = substitute_env(input_list)
-        assert result == ['py-template', '8080', 'static']
+        assert result == ["py-template", "8080", "static"]
 
     def test_substitute_nested_list(self):
         """중첩 리스트 재귀 치환"""
-        input_list = [
-            '${TEST_VAR}',
-            ['${PROJECT_NAME}', '${PORT}']
-        ]
+        input_list = ["${TEST_VAR}", ["${PROJECT_NAME}", "${PORT}"]]
         result = substitute_env(input_list)
-        assert result == [
-            'test_value',
-            ['py-template', '8080']
-        ]
+        assert result == ["test_value", ["py-template", "8080"]]
 
     # ========== 복합 구조 테스트 ==========
 
     def test_substitute_complex_structure(self):
         """딕셔너리 + 리스트 혼합 구조 치환"""
         input_data = {
-            'project': '${PROJECT_NAME}',
-            'servers': [
-                {'host': 'localhost', 'port': '${PORT}'},
-                {'host': 'prod', 'port': '443'}
-            ],
-            'paths': {
-                'logs': ['${LOG_PATH}/app.log', '${LOG_PATH}/error.log']
-            }
+            "project": "${PROJECT_NAME}",
+            "servers": [{"host": "localhost", "port": "${PORT}"}, {"host": "prod", "port": "443"}],
+            "paths": {"logs": ["${LOG_PATH}/app.log", "${LOG_PATH}/error.log"]},
         }
         result = substitute_env(input_data)
-        
-        assert result['project'] == 'py-template'
-        assert result['servers'][0]['port'] == '8080'
-        assert result['servers'][1]['port'] == '443'
-        assert result['paths']['logs'][0] == '/var/log/app/app.log'
-        assert result['paths']['logs'][1] == '/var/log/app/error.log'
+
+        assert result["project"] == "py-template"
+        assert result["servers"][0]["port"] == "8080"
+        assert result["servers"][1]["port"] == "443"
+        assert result["paths"]["logs"][0] == "/var/log/app/app.log"
+        assert result["paths"]["logs"][1] == "/var/log/app/error.log"
 
     # ========== 기타 타입 테스트 ==========
 
@@ -169,16 +143,16 @@ class TestSubstituteEnv:
 
     def test_substitute_with_special_chars(self):
         """특수문자 포함 환경변수명"""
-        os.environ['TEST_VAR_123'] = 'special_value'
+        os.environ["TEST_VAR_123"] = "special_value"
         result = substitute_env("${TEST_VAR_123}")
         assert result == "special_value"
-        os.environ.pop('TEST_VAR_123')
+        os.environ.pop("TEST_VAR_123")
 
     def test_substitute_preserves_original(self):
         """원본 데이터 불변성 확인 (immutability)"""
-        original = {'key': '${TEST_VAR}'}
+        original = {"key": "${TEST_VAR}"}
         result = substitute_env(original)
-        
+
         # 원본은 변경되지 않아야 함
-        assert original['key'] == '${TEST_VAR}'
-        assert result['key'] == 'test_value'
+        assert original["key"] == "${TEST_VAR}"
+        assert result["key"] == "test_value"

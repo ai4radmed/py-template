@@ -1,19 +1,22 @@
 """
 파일명: scripts/setup/update.py
 목적: template에서 갱신된 script들을 갱신함
-설명: 
+설명:
   - config, scripts, src, tests, Makefile을 template에서 복사
   - 같은 파일을 덮어쓰기방식, 다른 파일이 존재하면 보관하는 방식
 변경이력:
   - 2025-09-25: 최초 생성 (BenKorea)
 """
 
-import sys
-import shutil
 import os
+import shutil
+import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
-from common.logger import log_info, log_error
+
+from common.logger import log_error, log_info
+
 
 def update_from_template(template_path: Path, target_path: Path, update_list=None):
     if not template_path.exists():
@@ -43,15 +46,16 @@ def update_from_template(template_path: Path, target_path: Path, update_list=Non
             shutil.copy2(src_item, dst_item)
             log_info(f"[update.py] 파일 복사 완료: {item}")
 
+
 if __name__ == "__main__":
     load_dotenv()
-    project_root = os.getenv('PROJECT_ROOT')
+    project_root = os.getenv("PROJECT_ROOT")
     if not project_root:
-        log_error('[update.py] PROJECT_ROOT 환경변수가 설정되어 있지 않습니다.')
+        log_error("[update.py] PROJECT_ROOT 환경변수가 설정되어 있지 않습니다.")
         sys.exit(1)
     script_path = Path(__file__).resolve()
     projects_root = script_path.parent.parent.parent.parent
-    template_path = projects_root / 'py-template'
+    template_path = projects_root / "py-template"
     target_path = Path(project_root)
     update_list = ["config", "scripts", "src", "tests"]
     log_info(f"[update.py] template_path: {template_path}")
