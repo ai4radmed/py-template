@@ -204,7 +204,9 @@ def audit_log(
 
     # 추가 사용자 정의 필드 병합
     if detail:
-        log.get("action", {}).update({"detail": detail})
+        action_data = log.get("action")
+        if isinstance(action_data, dict):
+            action_data["detail"] = detail
 
     audit_logger.info(log)
 
