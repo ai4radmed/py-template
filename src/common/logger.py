@@ -155,22 +155,57 @@ def get_logger(name: str | None = PROJECT_NAME) -> logging.Logger:
     return logging.getLogger(name or None)
 
 
-def audit_log(action: str, detail: dict[str, Any] | None = None, compliance: str = "개인정보보호법 제28조") -> None:
+def audit_log(
+    action_type: str,
+    actor_id: str,
+    actor_ip: str | None = None,
+    target_id: str | None = None,
+    action_reason: str | None = None,
+    detail: dict[str, Any] | None = None,
+    compliance: str = "개인정보의 안전성 확보조치 기준 제8조",
+) -> None:
     """
-    감사 로그(JSON). 'audit' 로거는 전용 파일에만 기록되어야 함(stdout 금지).
+    개인정보보호 관련 감사 로그(Audit Log)를 JSON 형태로 기록합니다.
+    'audit' 로거는 전용 파일(/audit.log 등)에만 기록되어야 하며 stdout은 금지되어 있습니다.
+
+    단일 서버/로컬 환경이거나 식별할 클라이언트 IP가 없는 경우 actor_ip를 "127.0.0.1"
+    또는 내부망 IP로 처리하여 넘길 수 있습니다.
+
+    :param action_type: 수행 업무 구분 (예: READ, CREATE, DOWNLOAD 등)
+    :param actor_id: 개인정보취급자(접속자)의 고유 식별자 (ID, 사번 등)
+    :param actor_ip: 접속지 정보 (단말기 IP, 식별 불가 시 'unknown' 또는 'localhost/127.0.0.1')
+    :param target_id: 처리한 정보주체의 식별자 (고객ID, 환자번호 등)
+    :param action_reason: (특히 다운로드/출력 시) 엑세스 사유
+    :param detail: 추가적인 로깅 메타데이터 딕셔너리
+    :param compliance: 준수 법령 레퍼런스
     """
     audit_logger = get_logger("audit")
-    user = os.getenv("USER") or os.getenv("USERNAME") or "unknown"
+
+    # 법적 요구사항 (5W1H) 기반 구조화된 JSON 로그 조립
     log = {
-        "action": action,
-        "user": user,
-        "process_id": os.getpid(),
-        "server_id": socket.gethostname(),
+        "log_type": "audit",
         "timestamp": datetime.now(UTC).isoformat(),
-        "compliance_check": compliance,
+        "actor": {
+            "user_id": actor_id,
+            "ip_address": actor_ip or "unknown",
+        },
+        "action": {
+            "type": action_type,
+            "reason": action_reason,
+        },
+        "target": {
+            "subject_id": target_id,
+        },
+        "system": {
+            "compliance": compliance,
+            "server_hostname": socket.gethostname(),  # Docker 컨테이너 ID 또는 호스트명
+        },
     }
+
+    # 추가 사용자 정의 필드 병합
     if detail:
-        log.update(detail)
+        log.get("action", {}).update({"detail": detail})
+
     audit_logger.info(log)
 
 
