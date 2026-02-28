@@ -1,4 +1,7 @@
-.PHONY: env logs setup ensure-python sync venv test test-fast report report-audit lint format typecheck
+.PHONY: env logs setup ensure-python sync venv test test-fast report report-audit lint format typecheck check-venv
+
+# 프로젝트 가상환경 사용 (활성화 여부와 무관하게 동일 동작)
+VENV_PYTHON := $(CURDIR)/.venv/bin/python
 
 # === 환경 설정 ===
 # requires-python에 맞는 Python을 uv로 설치 (가상환경 생성 전 선행)
@@ -13,14 +16,22 @@ sync:
 venv: ensure-python sync
 	@echo "[venv] Python 및 가상환경 준비 완료."
 
+# .venv 존재 여부 확인 (logs 등 venv 필요한 타깃에서 사용)
+check-venv:
+ifeq ($(OS),Windows_NT)
+	@test -f .venv/Scripts/python.exe || (echo "[make] 가상환경이 없습니다. 먼저 'make venv' 또는 'make sync'를 실행하세요."; exit 1)
+else
+	@test -f $(VENV_PYTHON) || (echo "[make] 가상환경이 없습니다. 먼저 'make venv' 또는 'make sync'를 실행하세요."; exit 1)
+endif
+
 env:
 	uv run python scripts/setup/setup_env.py
 
-logs:
+logs: check-venv
 ifeq ($(OS),Windows_NT)
 	uv run python scripts/setup/setup_log_dir.py
 else
-	sudo `which python` scripts/setup/setup_log_dir.py
+	sudo -E $(VENV_PYTHON) scripts/setup/setup_log_dir.py
 endif
 	@echo "[setup_log_dir] 로그 디렉터리 설정 완료."
 
