@@ -9,7 +9,6 @@ from typing import cast
 import yaml
 
 from common.expand_vars import expand_vars
-from common.logger import log_debug, log_error
 
 
 def load_config(yml_path: str = "config/deidentification.yml", section: str | None = None) -> dict:
@@ -27,6 +26,8 @@ def load_config(yml_path: str = "config/deidentification.yml", section: str | No
         FileNotFoundError: 설정 파일이 존재하지 않을 때
         yaml.YAMLError: YAML 파싱 오류 발생 시
     """
+    from common.logger import log_debug, log_error
+
     try:
         log_debug(f"[load_config] Loading config from: {yml_path}, section: {section}")
 

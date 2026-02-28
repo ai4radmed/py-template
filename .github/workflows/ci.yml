@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  PROJECT_NAME: py-template
+  LOG_PATH: logs
+
 jobs:
   # ── 정적 코드 분석 (GS 인증: 신뢰성/유지보수성) ──
   lint:
@@ -50,8 +54,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --group dev --extra all
 
-      - name: Ensure reports directory exists
-        run: uv run python -c "from pathlib import Path; Path('reports').mkdir(exist_ok=True)"
+      - name: Ensure directories exist (reports, logs)
+        run: uv run python -c "from pathlib import Path; Path('reports').mkdir(parents=True, exist_ok=True); Path('logs').mkdir(parents=True, exist_ok=True)"
 
       - name: Run tests with coverage and reports (CI: local_only 제외)
         run: uv run pytest -m "not local_only" --html=reports/test_report.html --self-contained-html --cov=src --cov-report=html:reports/coverage --cov-report=xml:reports/coverage.xml --alluredir=reports/allure-results --junitxml=reports/junit.xml -v

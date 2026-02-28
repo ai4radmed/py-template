@@ -26,7 +26,13 @@ from common.expand_vars import expand_vars_str
 
 load_dotenv(override=True)
 
-PROJECT_NAME = os.getenv("PROJECT_NAME", "default")
+PROJECT_NAME = os.getenv("PROJECT_NAME", "py-template")
+# CI 또는 로컬 초기 환경을 위해 기본값 보장
+if "PROJECT_NAME" not in os.environ:
+    os.environ["PROJECT_NAME"] = PROJECT_NAME
+if "LOG_PATH" not in os.environ:
+    os.environ["LOG_PATH"] = "logs"
+
 VALID_LEVELS = {"CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"}
 
 
@@ -133,10 +139,22 @@ def _load_logging_config() -> dict:
     return dict(config)
 
 
+_setup_in_progress = False
+
+
 def setup_logging() -> None:
     """dictConfig로 로깅을 초기화."""
-    cfg = _load_logging_config()
-    logging.config.dictConfig(cfg)
+    global _setup_in_progress
+    if _setup_in_progress:
+        # 이미 설정 진행 중이면 재진입 방지 (circular import/recursion)
+        return
+
+    _setup_in_progress = True
+    try:
+        cfg = _load_logging_config()
+        logging.config.dictConfig(cfg)
+    finally:
+        _setup_in_progress = False
 
 
 def get_logger(name: str | None = PROJECT_NAME) -> logging.Logger:
@@ -145,7 +163,7 @@ def get_logger(name: str | None = PROJECT_NAME) -> logging.Logger:
     기본값은 .env의 PROJECT_NAME.
     """
     root_logger = logging.getLogger()
-    if not root_logger.hasHandlers():
+    if not root_logger.hasHandlers() and not _setup_in_progress:
         setup_logging()
     return logging.getLogger(name or None)
 
