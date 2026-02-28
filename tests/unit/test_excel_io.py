@@ -5,16 +5,20 @@
 - 임시 폴더에 엑셀 파일을 생성하고, read_excels가 올바른 DataFrame 딕셔너리를 반환하는지 확인
 변경이력:
   - 2025-09-24: 최초 생성 (BenKorea)
+  - 2026-02-28: GS/ISMS-P 테스트 마커 추가 (AI Agent)
 """
 
 import tempfile
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from adapters.excel_io import read_excels
 
 
+@pytest.mark.gs_req("GS-07")  # 기능의 정확성
+@pytest.mark.isms("ISMS-2.7-47")  # 보안 설계 및 구현(시험 가능 구조와 연계)
 def test_read_excels(tmp_path):
     # 임시 엑셀 파일 생성
     df1 = pd.DataFrame({"a": [1, 2], "b": [3, 4]})

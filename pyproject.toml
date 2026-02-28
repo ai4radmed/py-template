@@ -59,10 +59,11 @@ ignore_missing_imports = true
 testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
-    "gs_req(req_id): GS 인증 요구사항 ID (예: REQ-SEC-001)",
-    "gs_category(category): GS 인증 평가 항목 (예: 보안성, 신뢰성)",
+    "gs_req(req_id): GS 체크리스트 항목 ID (예: GS-07, GS-31). 구분은 항목으로 조회.",
+    "isms(id): ISMS-P 체크리스트 항목 ID",
     "integration: 통합 테스트 (DB, 파일 등 외부 자원 필요)",
     "e2e: 종단 간 테스트 (실제 사용자 시나리오)",
+    "local_only: 로컬에서만 실행 (CI에서는 제외, pytest -m \"not local_only\")",
 ]
 
 [tool.coverage.run]

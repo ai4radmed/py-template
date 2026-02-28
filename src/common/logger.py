@@ -1,16 +1,14 @@
 """
-파일명: src/common/logger.py
-목적: 로깅 프레임워크 제공
-설명:
-  - .env + logging.yml 기반 동적 설정
-  - YAML 전역(키/값) 환경변수 치환: ${PROJECT_NAME}, ${LOG_PATH}...
-  - 파일 핸들러의 경로/권한 검증(자동 생성 금지)
-  - LOG_LEVEL로 root/서브 로거 레벨 일괄 오버라이드
-  - 프로젝트 로거 자동 보장(없으면 생성)
-  - audit 로거의 stdout 출력 금지 보장(정책 위반 시 예외)
-  - get_logger, log_info 등 래퍼 제공
+기능:
+  - config/logging.yml + .env 기반 로깅 설정
+  - get_logger, audit_log 등 래퍼 제공
+  - 파일 핸들러 경로·권한 검증
+  - audit 로거 stdout 금지 (정책: documents/LOGGING_POLICY.md)
+
 변경이력:
-  - 2025-08-12: 새로 생성 (BenKorea)
+  - 2026-02-28: 파일 핸들러 경로·권한 검증, audit 로거 stdout 금지 및 load_config 연동
+  - 2025-08-12: get_logger, audit_log 등 래퍼 제공 (BenKorea)
+  - 2025-08-12: config/logging.yml + .env 기반 로깅 설정 (BenKorea)
 """
 
 import logging
@@ -22,10 +20,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-import yaml
 from dotenv import load_dotenv
 
-from common.substitute import substitute_env, substitute_env_str
+from common.expand_vars import expand_vars_str
 
 load_dotenv(override=True)
 
@@ -89,22 +86,20 @@ def _assert_audit_is_file_only(config: dict) -> None:
 def _load_logging_config() -> dict:
     """
     config/logging.yml을 로드하여:
-      - YAML 전역 ENV 치환(키/값)
+      - YAML 로드 및 ENV 치환은 common.load_config 사용(단일 책임)
       - LOG_LEVEL로 레벨 일괄 오버라이드
       - 파일 핸들러 filename 치환 및 경로/권한 검증
       - 프로젝트 로거 보장
       - audit stdout 금지 검증
     을 수행한 dictConfig용 딕셔너리를 반환.
     """
+    from common.load_config import load_config
+
     yaml_path = Path(__file__).parent.parent.parent / "config" / "logging.yml"
     if not yaml_path.exists():
         raise FileNotFoundError(f"logging.yml 파일이 필요합니다: {yaml_path}")
 
-    with open(yaml_path, encoding="utf-8") as f:
-        config = yaml.safe_load(f)
-
-    # 0) YAML 전역(키/값) ENV 치환
-    config = substitute_env(config)
+    config = load_config(str(yaml_path))
 
     # 1) LOG_LEVEL 일괄 오버라이드
     level = _get_log_level()
@@ -123,7 +118,7 @@ def _load_logging_config() -> dict:
             raw_filename = handler_cfg.get("filename", "")
             if not raw_filename:
                 raise ValueError(f"[{handler_name}] filename이 지정되어 있지 않습니다.")
-            expanded = os.path.expandvars(substitute_env_str(raw_filename))
+            expanded = os.path.expandvars(expand_vars_str(raw_filename))
             if expanded == raw_filename and ("${" in raw_filename or "$" in raw_filename):
                 raise ValueError(
                     f"[{handler_name}] 환경변수 치환 실패: {raw_filename}\n- .env의 관련 변수를 확인하세요."

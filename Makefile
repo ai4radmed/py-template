@@ -1,31 +1,40 @@
-.PHONY: env logs setup backup restore update test lint format typecheck report
+.PHONY: env logs setup ensure-python sync venv test test-fast report report-audit lint format typecheck
 
 # === 환경 설정 ===
+# requires-python에 맞는 Python을 uv로 설치 (가상환경 생성 전 선행)
+ensure-python:
+	uv run python scripts/setup/ensure_python_requires.py
+
+# 가상환경 생성 및 의존성 설치 (ensure-python 후 실행 권장)
+sync:
+	uv sync
+
+# Python 설치 + 가상환경/의존성 한 번에 (클론 후 첫 설정 시)
+venv: ensure-python sync
+	@echo "[venv] Python 및 가상환경 준비 완료."
+
 env:
 	uv run python scripts/setup/setup_env.py
 
 logs:
 ifeq ($(OS),Windows_NT)
-	uv run python scripts/setup/create_logs.py
+	uv run python scripts/setup/setup_log_dir.py
 else
-	sudo `which python` scripts/setup/create_logs.py
+	sudo `which python` scripts/setup/setup_log_dir.py
 endif
-	@echo "[create_logs] Log path and file creation complete."
+	@echo "[setup_log_dir] 로그 디렉터리 설정 완료."
 
 setup: env logs
 	@echo "[setup] 환경 설정 완료."
 
-# === 데이터 관리 ===
-backup:
-	uv run python scripts/setup/backup.py
-
-restore:
-	uv run python scripts/setup/restore_backup.py
-	@echo "[restore] Backup restored."
-
 # === 개발 도구 ===
+# 테스트만 실행 (리포트 없음). 로컬 전체 = local_only 포함.
 test:
-	uv run pytest
+	uv run pytest -v
+
+# CI와 동일한 테스트 세트 (local_only 제외). 리포트 없음.
+test-fast:
+	uv run pytest -m "not local_only" -v
 
 lint:
 	uv run ruff check .
@@ -36,7 +45,9 @@ format:
 typecheck:
 	uv run mypy src/
 
-# === GS 인증 산출물 생성 ===
+# === 테스트 및 리포트 (업계표준: 실행과 리포트 생성 분리) ===
+# 리포트 생성 = 테스트 실행 + 산출물(HTML, JUnit, Allure, coverage) 생성.
+# report: 전체 테스트(local_only 포함) + 리포트 → GS/ISMS-P 심사용.
 report:
 	uv run pytest \
 		--html=reports/test_report.html --self-contained-html \
@@ -45,6 +56,6 @@ report:
 		--junitxml=reports/junit.xml \
 		-v
 
-# === 템플릿 업데이트 ===
-update:
-	uv run python scripts/setup/update.py
+# report와 동일하되 별칭(심사용 전체 테스트+리포트임을 명시).
+report-audit: report
+	@echo "[report-audit] GS/ISMS-P 심사용 전체 테스트 및 리포트 생성 완료. reports/ 확인."

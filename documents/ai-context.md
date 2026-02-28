@@ -17,8 +17,8 @@
 ## 2. 코드 구조와 의존성 (요약)
 
 - **코드 구조**
-  - `src/common/` — 핵심 유틸리티 (logger, substitute, load_config, database, excel_io, get_cipher 등)
-  - `scripts/setup/` — 환경 설정, 로그 디렉터리 생성, 백업/복원 스크립트
+  - `src/common/` — 핵심 유틸리티 (logger, expand_vars, load_config, database, excel_io, get_cipher 등)
+  - `scripts/setup/` — 환경 설정, 로그 디렉터리 생성 등 스크립트
   - `config/logging.yml` — 로깅 설정
   - `tests/` — 단위 테스트 등
 

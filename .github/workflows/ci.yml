@@ -50,8 +50,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --group dev --extra all
 
-      - name: Run tests with coverage and reports
-        run: uv run pytest --html=reports/test_report.html --self-contained-html --cov=src --cov-report=html:reports/coverage --cov-report=xml:reports/coverage.xml --alluredir=reports/allure-results --junitxml=reports/junit.xml -v
+      - name: Run tests with coverage and reports (CI: local_only 제외)
+        run: uv run pytest -m "not local_only" --html=reports/test_report.html --self-contained-html --cov=src --cov-report=html:reports/coverage --cov-report=xml:reports/coverage.xml --alluredir=reports/allure-results --junitxml=reports/junit.xml -v
 
       - name: Upload test reports
         if: always()

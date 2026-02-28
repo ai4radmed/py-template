@@ -35,7 +35,7 @@
 - **`src/common/`** — 핵심 유틸리티 (외부 의존성 없음, 순수 Python + dotenv/pyyaml)
   - `common.logger` — 로깅 설정/헬퍼
   - `common.load_config` — YAML 설정 파일 로드 + 환경변수 치환
-  - `common.substitute` — 문자열/컬렉션 내 환경변수 치환
+  - `common.expand_vars` — 문자열/컬렉션 내 환경변수 확장
 
 - **`src/adapters/`** — 외부 시스템 연동 (선택적 의존성 필요)
   - `adapters.database` — PostgreSQL 연결 및 쿼리 유틸 (`pip install py-template[db]`)
@@ -57,7 +57,7 @@
   - `config/logging.yml` 기반 설정.
   - `.env`의 `PROJECT_NAME`, `LOG_PATH`, `LOG_LEVEL` 등에 따라 동작이 달라집니다.
   - 콘솔/파일 분리, 서비스 로그와 audit 로그 분리, JSON 포맷 등의 정책을 포함합니다.
-  - 환경변수 치환은 `common.substitute` 모듈에 위임 (중복 제거).
+  - 환경변수 확장은 `common.expand_vars` 모듈에 위임 (중복 제거).
 
 - **보안 및 규제 준수 로깅 (Audit Log)** 
   - 본 프로젝트는 개인정보 보호법 및 안전성 확보조치 기준에 따라 엄격한 감사 로그 정책을 적용합니다.
@@ -68,17 +68,15 @@
 `scripts/setup/`와 `Makefile`은 **개발 편의를 위한 자동화 스크립트 모음**입니다.
 
 - 주요 스크립트
-  - `scripts/setup/setup_env.py` — `.env` 생성/초기화
-  - `scripts/setup/setup_pyenv.py` — pyenv 설정
-  - `scripts/setup/create_logs.py` — 로그 디렉터리 및 파일 생성
-  - `scripts/setup/backup.py` / `restore_backup.py` — 설정/환경 백업 및 복원
-  - `scripts/setup/update.py` — 템플릿 업데이트 (src/ 전체 복사)
+  - `scripts/setup/setup_env.py` — `.env` 생성 편의 스크립트 (표준: .env.example 복사 후 수동 편집)
+  - `scripts/setup/ensure_python_requires.py` — requires-python에 맞는 Python uv 설치
+  - `scripts/setup/setup_log_dir.py` — 로그 디렉터리 생성 및 권한 설정
+  - 템플릿 업데이트: 파생 프로젝트에서는 Git merge 사용 (README 참고).
 
 - `Makefile` 주요 타깃
   - `env` — `.env` 생성/초기화
   - `logs` — 로그 디렉터리 생성
   - `setup` — env + logs 일괄 실행
-  - `backup` / `restore` — 백업/복원
   - `test` — pytest 실행
   - `lint` — ruff check 실행
   - `format` — ruff format 실행
@@ -115,9 +113,8 @@
   - `tests/integration/` — 모듈 간 연동 테스트 (DB, 파일 등 외부 자원)
   - `tests/e2e/` — 종단 간 테스트 (실제 사용자 시나리오)
 
-- **GS 인증 마커**: pytest custom marker로 테스트와 인증 요구사항을 매핑
-  - `@pytest.mark.gs_req("REQ-XXX-NNN")` — 요구사항 ID
-  - `@pytest.mark.gs_category("보안성")` — 평가 항목
+- **GS 인증 마커**: pytest custom marker로 테스트와 인증 항목을 매핑
+  - `@pytest.mark.gs_req("GS-07")` — GS 체크리스트 항목 ID (구분은 GS인증기준.md에서 조회)
 
 - **산출물 생성** (`make report`)
   - `reports/test_report.html` — pytest-html 테스트 결과 보고서

@@ -1,10 +1,15 @@
 """
-파일명: scripts/setup/setup_env.py
-목적: .env 및 _environment 생성 스크립트
-설명: .env 파일 생성 및 _environment 복사
-변경이력:
+기능:
+  - .env.example을 복사해 .env 생성 후, 프로젝트명·경로·OS별 LOG_PATH 자동 치환
+  - (선택) .env → _environment 복사
+
+업계 표준: .env.example을 제공하고 사용자가 복사(cp .env.example .env) 후 수동 편집.
+본 스크립트는 그 위에 둔 편의 도구이며, 표준 대신 사용해도 되고 수동으로 해도 됨.
+
+변경이력 (최신순):
+  - 2026-02-28: 업계 표준 대비 편의 스크립트임을 명시
   - 2025-09-24: 모듈 메타데이터 추가 (BenKorea)
-  - 2025-09-07: 경로의 \\ -> \\ 치환 추가 (BenKorea)
+  - 2025-09-07: 경로 백슬래시 치환 추가 (BenKorea)
 """
 
 import platform
