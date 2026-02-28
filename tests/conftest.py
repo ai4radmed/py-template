@@ -25,4 +25,3 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "isms(id): ISMS-P 체크리스트 항목 ID를 명시합니다. 예: ISMS-2.8-54",
     )
-

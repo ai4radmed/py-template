@@ -625,11 +625,14 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ff3", marker = "extra == 'all'", specifier = ">=1.0" },
     { name = "ff3", marker = "extra == 'cipher'", specifier = ">=1.0" },
+    { name = "openpyxl", marker = "extra == 'all'", specifier = ">=3.1" },
     { name = "openpyxl", marker = "extra == 'excel'", specifier = ">=3.1" },
+    { name = "pandas", marker = "extra == 'all'", specifier = ">=2.3" },
     { name = "pandas", marker = "extra == 'excel'", specifier = ">=2.3" },
+    { name = "psycopg2-binary", marker = "extra == 'all'", specifier = ">=2.9" },
     { name = "psycopg2-binary", marker = "extra == 'db'", specifier = ">=2.9" },
-    { name = "py-template", extras = ["db", "excel", "cipher"], marker = "extra == 'all'" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "pyyaml", specifier = ">=6.0" },
 ]

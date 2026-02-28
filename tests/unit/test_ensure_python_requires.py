@@ -15,7 +15,7 @@ _setup_dir = _project_root / "scripts" / "setup"
 if str(_setup_dir) not in sys.path:
     sys.path.insert(0, str(_setup_dir))
 
-import ensure_python_requires as _mod
+import ensure_python_requires as _mod  # noqa: E402
 
 get_requires_python = _mod.get_requires_python
 
