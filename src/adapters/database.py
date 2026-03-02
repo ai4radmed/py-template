@@ -1,13 +1,11 @@
 """
-파일명: src/common/database.py
-목적: 데이터베이스 연결 및 쿼리 실행 담당
-기능:
-- PostgreSQL 데이터베이스에 연결
-- SQL 쿼리 실행 및 결과 반환
-- 에러 발생 시 로깅
-변경이력:
-  - 2025-09-01: 최초 생성 (BenKorea)
+명세서(`.spec/src/adapters/database.md`) 기반 PostgreSQL 데이터베이스 어댑터.
+
+역할:
+- .env 기반 PostgreSQL 연결을 생성하고, 단일/배치 쿼리 실행을 위한 헬퍼를 제공한다.
 """
+
+from __future__ import annotations
 
 import os
 
@@ -19,8 +17,8 @@ from common.logger import log_debug, log_error
 load_dotenv()
 
 
-def get_db_connection():
-    """표준 데이터베이스 연결을 반환합니다."""
+def get_db_connection() -> psycopg2.extensions.connection:
+    """표준 PostgreSQL 데이터베이스 연결을 반환한다."""
     try:
         conn = psycopg2.connect(
             host=os.getenv("DB_HOST", "localhost"),
@@ -31,13 +29,25 @@ def get_db_connection():
         )
         log_debug("데이터베이스 연결 성공")
         return conn
-    except psycopg2.Error as e:
-        log_error(f"데이터베이스 연결 실패: {e}")
+    except psycopg2.Error as exc:
+        log_error(f"데이터베이스 연결 실패: {exc}")
         raise
 
 
-def execute_query(query: str, params=None, fetch_one=False, fetch_all=False):
-    """쿼리 실행 헬퍼 함수"""
+def execute_query(
+    query: str,
+    params: object | None = None,
+    fetch_one: bool = False,
+    fetch_all: bool = False,
+):
+    """
+    단일 SQL 쿼리를 실행하는 헬퍼.
+
+    - fetch_one=True 이면 cursor.fetchone() 결과 반환
+    - fetch_all=True 이면 cursor.fetchall() 결과 반환
+    - 둘 다 False 이면 None 반환
+    """
+    conn = None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -56,15 +66,21 @@ def execute_query(query: str, params=None, fetch_one=False, fetch_all=False):
 
         return result
 
-    except psycopg2.Error as e:
-        log_error(f"쿼리 실행 오류: {e}")
-        if "conn" in locals():
+    except psycopg2.Error as exc:
+        log_error(f"쿼리 실행 오류: {exc}")
+        if conn is not None:
             conn.rollback()
+            conn.close()
         raise
 
 
-def execute_many(query: str, data_list):
-    """배치 삽입 헬퍼 함수"""
+def execute_many(query: str, data_list: list[object]) -> int:
+    """
+    동일한 쿼리에 여러 데이터 레코드를 배치 실행하는 헬퍼.
+
+    영향받은 행 수(rowcount)를 반환한다.
+    """
+    conn = None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -78,8 +94,10 @@ def execute_many(query: str, data_list):
 
         return affected_rows
 
-    except psycopg2.Error as e:
-        log_error(f"배치 실행 오류: {e}")
-        if "conn" in locals():
+    except psycopg2.Error as exc:
+        log_error(f"배치 실행 오류: {exc}")
+        if conn is not None:
             conn.rollback()
+            conn.close()
         raise
+

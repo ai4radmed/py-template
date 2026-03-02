@@ -1,8 +1,12 @@
 """
-변경경이력:
-  - 2025-11-26 값에 포함된 ${VAR} 패턴을 환경변수값으로 치환 (BenKorea)
-  - 2025-11-26 YAML 경로를 받아 dict로 로드 (BenKorea)
+명세서(`.spec/src/common/load_config.md`) 기반 YAML 설정 로더.
+
+역할:
+- YAML 설정 파일을 UTF-8 로 읽고, 내용에 포함된 ${VAR} 패턴을
+  환경 변수(os.environ) 값으로 치환해 dict 로 반환한다.
 """
+
+from __future__ import annotations
 
 from typing import cast
 
@@ -13,20 +17,22 @@ from common.expand_vars import expand_vars
 
 def load_config(yml_path: str = "config/deidentification.yml", section: str | None = None) -> dict:
     """
-    YAML 설정 파일을 로드하고 환경변수를 치환하여 반환
+    YAML 설정 파일을 로드하고 환경변수를 치환하여 반환한다.
 
     Args:
-        yml_path (str): YAML 파일 경로 (기본값: config/deidentification.yml)
-        section (str, optional): 특정 섹션만 추출. None이면 전체 반환
+        yml_path: YAML 파일 경로 (기본값: config/deidentification.yml)
+        section: 특정 섹션만 추출하고 싶을 때 사용하는 최상위 키 이름.
 
     Returns:
-        dict: 환경변수가 치환된 설정 딕셔너리
+        환경변수가 치환된 설정 딕셔너리.
+        section 이 지정되었으나 존재하지 않으면 빈 dict 를 반환한다.
 
     Raises:
         FileNotFoundError: 설정 파일이 존재하지 않을 때
         yaml.YAMLError: YAML 파싱 오류 발생 시
+        예기치 못한 예외는 로깅 후 그대로 다시 발생시킨다.
     """
-    from common.logger import log_debug, log_error
+    from .logger import log_debug, log_error
 
     try:
         log_debug(f"[load_config] Loading config from: {yml_path}, section: {section}")
@@ -51,9 +57,10 @@ def load_config(yml_path: str = "config/deidentification.yml", section: str | No
     except FileNotFoundError:
         log_error(f"[load_config] Config file not found: {yml_path}")
         raise
-    except yaml.YAMLError as e:
-        log_error(f"[load_config] YAML parsing error in {yml_path}: {e}")
+    except yaml.YAMLError as exc:
+        log_error(f"[load_config] YAML parsing error in {yml_path}: {exc}")
         raise
-    except Exception as e:
-        log_error(f"[load_config] Unexpected error loading {yml_path}: {e}")
+    except Exception as exc:  # noqa: BLE001
+        log_error(f"[load_config] Unexpected error loading {yml_path}: {exc}")
         raise
+

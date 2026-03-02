@@ -1,13 +1,12 @@
 """
-기능:
-  - .env의 LOG_PATH를 읽어 로그 디렉터리 생성
-  - Linux/macOS: 생성한 디렉터리의 소유권(소유자·그룹) 및 권한(755) 설정
+명세서(`.spec/scripts/setup/setup_log_dir.md`) 기반 로그 디렉터리 초기화 스크립트.
 
-변경이력 (최신순):
-  - 2026-02-28: 오류 보강(공백·기존 파일 검사, Linux $HOME 치환), resolve_log_path_from_env 분리·테스트 추가
-  - 2026-02-28: create_logs.py → setup_log_dir.py
-  - 2025-09-24: 소유권·권한 설정, 새로 생성 (BenKorea)
+역할:
+- .env 의 LOG_PATH 설정을 해석해 로그 디렉터리를 생성하고,
+  비 Windows 환경에서는 소유자·그룹 및 권한(755)을 설정한다.
 """
+
+from __future__ import annotations
 
 import getpass
 import os
@@ -21,15 +20,20 @@ from dotenv import load_dotenv
 def resolve_log_path_from_env(log_path: str | None, project_name: str, os_name: str) -> str | None:
     """
     LOG_PATH 문자열에서 {PROJECT_NAME}, %USERPROFILE%, $HOME 치환 후 반환.
-    테스트 가능하도록 순수 함수로 분리.
+
+    - log_path 가 비어 있거나 공백뿐이면 None 반환.
+    - Windows: %USERPROFILE% 를 환경변수 USERPROFILE 값으로 치환.
+    - 그 외 OS: $HOME 을 환경변수 HOME 값으로 치환.
     """
     if not log_path or not log_path.strip():
         return None
+
     s = log_path.strip().replace("{PROJECT_NAME}", (project_name or "default").strip())
     if os_name == "Windows":
         s = s.replace("%USERPROFILE%", os.environ.get("USERPROFILE", ""))
     else:
         s = s.replace("$HOME", os.environ.get("HOME", ""))
+
     return s.strip() or None
 
 
@@ -69,8 +73,8 @@ def main() -> int:
                 shutil.chown(str(log_dir), user=user, group=user)
                 os.chmod(str(log_dir), 0o755)
                 print(f"[setup_log_dir] 소유자 및 권한 변경: {user}:{user}, 755")
-            except Exception as e:
-                print(f"[setup_log_dir] 소유자/권한 변경 실패: {e}")
+            except Exception as exc:  # noqa: BLE001
+                print(f"[setup_log_dir] 소유자/권한 변경 실패: {exc}")
     else:
         print(f"[setup_log_dir] 이미 디렉터리 존재: {log_dir}")
 
@@ -78,4 +82,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    exit(main())
+    raise SystemExit(main())
+

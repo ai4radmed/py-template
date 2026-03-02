@@ -1,5 +1,5 @@
 """
-pytest 공통 설정 및 GS/ISMS-P 커스텀 마커 등록.
+pytest 공통 설정 및 GS/ISMS-P 커스텀 마커를 등록하는 모듈.
 
 마커 사용 예시:
     @pytest.mark.gs_req("GS-24")
@@ -7,6 +7,8 @@ pytest 공통 설정 및 GS/ISMS-P 커스텀 마커 등록.
     def test_password_encryption_strength():
         ...
 """
+
+from __future__ import annotations
 
 import pytest
 
@@ -25,3 +27,4 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "isms(id): ISMS-P 체크리스트 항목 ID를 명시합니다. 예: ISMS-2.8-54",
     )
+

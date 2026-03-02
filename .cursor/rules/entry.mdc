@@ -6,7 +6,7 @@ alwaysApply: true
 # py-template AI Entry Rule
 
 - 이 프로젝트에서 코드를 작성·수정하기 전에, 항상 다음 문서를 먼저 읽으세요.
-  - `@documents/ai-context.md`
+  - `ARCHITECTURE.md`
 
 - 세부 규칙(로깅, DB, uv 워크플로우, 테스트 등)은 위 문서와 그 안에서 링크된 주제별 문서를 기준으로 판단하세요.
 

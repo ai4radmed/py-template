@@ -1,15 +1,14 @@
 """
-기능:
-  - config/logging.yml + .env 기반 로깅 설정
-  - get_logger, audit_log 등 래퍼 제공
-  - 파일 핸들러 경로·권한 검증
-  - audit 로거 stdout 금지 (정책: documents/LOGGING_POLICY.md)
+명세서(`.spec/src/common/logger.md`) 기반 로깅 유틸리티.
 
-변경이력:
-  - 2026-02-28: 파일 핸들러 경로·권한 검증, audit 로거 stdout 금지 및 load_config 연동
-  - 2025-08-12: get_logger, audit_log 등 래퍼 제공 (BenKorea)
-  - 2025-08-12: config/logging.yml + .env 기반 로깅 설정 (BenKorea)
+역할:
+- config/logging.yml + .env 기반 로깅 설정
+- get_logger, audit_log 등 래퍼 제공
+- 파일 핸들러 경로·권한 검증
+- audit 로거 stdout 금지 (정책: documents/LOGGING_POLICY.md)
 """
+
+from __future__ import annotations
 
 import logging
 import logging.config
@@ -243,3 +242,4 @@ def log_error(msg: str) -> None:
 
 def log_critical(msg: str) -> None:
     get_logger().critical(msg)
+

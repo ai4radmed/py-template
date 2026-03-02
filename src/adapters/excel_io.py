@@ -1,75 +1,68 @@
 """
-파일명: src/common/excel_io.py
-목적: 지정된 폴더의 엑셀파일의 입출력 담당
-기능:
-- input_dir를 인자로 받아 폴더 내 모든 xls/xlsx 파일을 탐색
-- Path 객체 및 pandas 라이브러리 사용
-- {파일명: 데이터프레임} 형태의 딕셔너리 반환
-변경이력:
-  - 2025-10-02: 최초 구현 (BenKorea)
+명세서(`.spec/src/adapters/excel_io.md`) 기반 엑셀 입출력 유틸리티.
+
+역할:
+- 지정한 디렉터리에서 엑셀 파일을 일괄 읽어 dict[str, DataFrame] 으로 제공하고,
+  여러 DataFrame 을 디렉터리에 일괄 저장하는 함수들을 제공한다.
 """
+
+from __future__ import annotations
 
 import inspect
 import os
 from pathlib import Path
+from typing import Dict
 
 import pandas as pd
 
 from common.logger import log_debug, log_error, log_info
 
 
-def read_excels(input_dir: str) -> dict[str, pd.DataFrame]:
+def read_excels(input_dir: str) -> Dict[str, pd.DataFrame]:
+    """
+    input_dir 하위의 .xls/.xlsx 파일을 재귀적으로 읽어 딕셔너리로 반환한다.
+
+    반환 형식:
+        {파일명(str): pandas.DataFrame}
+    """
     excel_files = Path(input_dir).rglob("*.xls*")
-    dfs = {}
+    dfs: Dict[str, pd.DataFrame] = {}
     for file in excel_files:
         try:
             df = pd.read_excel(file)
             dfs[file.name] = df
             log_debug(f"[read_excels] from: {file.name} (shape={df.shape})")
-        except Exception as e:
+        except Exception as exc:  # noqa: BLE001
             frame = inspect.currentframe()
             func_name = frame.f_code.co_name if frame else "unknown"
-            log_error(f"[{func_name}] 엑셀 파일 읽기 오류: {file} - {e}")
+            log_error(f"[{func_name}] 엑셀 파일 읽기 오류: {file} - {exc}")
     return dfs
 
 
-def save_excels(output_dir: str, dataframes_dict: dict[str, pd.DataFrame], prefix: str | None = None) -> None:
+def save_excels(output_dir: str, dataframes_dict: Dict[str, pd.DataFrame], prefix: str | None = None) -> None:
     """
-    데이터프레임 딕셔너리를 지정된 디렉토리에 엑셀 파일로 저장하는 일반화된 함수.
+    데이터프레임 딕셔너리를 지정된 디렉토리에 엑셀 파일로 저장하는 함수.
 
     Args:
-        output_dir (str): 저장할 디렉토리 경로
-        dataframes_dict (Dict[str, pd.DataFrame]): {파일명: 데이터프레임} 딕셔너리
-        prefix (Optional[str]): 파일명 앞에 붙일 접두사 (예: "deid_", "structured_")
-
-    Returns:
-        None
-
-    Raises:
-        OSError: 디렉토리 생성 실패시
-        Exception: 파일 저장 실패시
-
-    Example:
-        >>> dfs = {"report1.xlsx": df1, "report2.xlsx": df2}
-        >>> save_excel_files("output/", dfs, prefix="deid_")
-        # 결과: "output/deid_report1.xlsx", "output/deid_report2.xlsx"
+        output_dir: 저장할 디렉토리 경로
+        dataframes_dict: {파일명: DataFrame} 형태의 딕셔너리
+        prefix: 파일명 앞에 붙일 접두사 (예: "deid_", "structured_")
     """
-
     # 유효성 검사
     if not output_dir or not isinstance(output_dir, str) or output_dir.strip() == "":
-        log_error("[save_excel_files] output_dir가 설정되지 않았습니다.")
+        log_error("[save_excels] output_dir가 설정되지 않았습니다.")
         return
 
     if not dataframes_dict:
-        log_info("[save_excel_files] 저장할 데이터가 없습니다.")
+        log_info("[save_excels] 저장할 데이터가 없습니다.")
         return
 
     # 출력 디렉토리 생성
     try:
         os.makedirs(output_dir, exist_ok=True)
-        log_debug(f"[save_excel_files] 출력 디렉토리 준비: {output_dir}")
-    except OSError as e:
-        log_error(f"[save_excel_files] 디렉토리 생성 실패: {output_dir} - {e}")
+        log_debug(f"[save_excels] 출력 디렉토리 준비: {output_dir}")
+    except OSError as exc:  # noqa: BLE001
+        log_error(f"[save_excels] 디렉토리 생성 실패: {output_dir} - {exc}")
         return
 
     # 각 파일 저장
@@ -85,7 +78,7 @@ def save_excels(output_dir: str, dataframes_dict: dict[str, pd.DataFrame], prefi
             elif not base_filename.endswith(".xlsx"):
                 base_filename = base_filename + ".xlsx"
 
-            # 접두사/접미사 추가
+            # 접두사 추가
             name_parts = []
             if prefix:
                 name_parts.append(prefix.rstrip("_"))
@@ -100,12 +93,13 @@ def save_excels(output_dir: str, dataframes_dict: dict[str, pd.DataFrame], prefi
 
             # 파일 저장
             df.to_excel(output_path, index=False)
-            log_debug(f"[save_excel_files] 저장 완료: {output_path}")
+            log_debug(f"[save_excels] 저장 완료: {output_path}")
             saved_count += 1
 
-        except Exception as e:
-            log_error(f"[save_excel_files] 저장 실패: {original_filename} - {e}")
+        except Exception as exc:  # noqa: BLE001
+            log_error(f"[save_excels] 저장 실패: {original_filename} - {exc}")
             failed_count += 1
 
     # 결과 요약
-    log_info(f"[save_excel_files] 저장 완료: {saved_count}개, 실패: {failed_count}개")
+    log_info(f"[save_excels] 저장 완료: {saved_count}개, 실패: {failed_count}개")
+

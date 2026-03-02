@@ -156,3 +156,4 @@ class TestExpandVars:
         # 원본은 변경되지 않아야 함
         assert original["key"] == "${TEST_VAR}"
         assert result["key"] == "test_value"
+

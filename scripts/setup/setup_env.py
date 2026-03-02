@@ -1,57 +1,90 @@
 """
-기능:
-  - .env.example을 복사해 .env 생성 후, 프로젝트명·경로·OS별 LOG_PATH 자동 치환
-  - (선택) .env → _environment 복사
+명세서(`.spec/scripts/setup/setup_env.md`) 기반 .env 생성 편의 스크립트.
 
-업계 표준: .env.example을 제공하고 사용자가 복사(cp .env.example .env) 후 수동 편집.
-본 스크립트는 그 위에 둔 편의 도구이며, 표준 대신 사용해도 되고 수동으로 해도 됨.
-
-변경이력 (최신순):
-  - 2026-02-28: 업계 표준 대비 편의 스크립트임을 명시
-  - 2025-09-24: 모듈 메타데이터 추가 (BenKorea)
-  - 2025-09-07: 경로 백슬래시 치환 추가 (BenKorea)
+역할:
+- 프로젝트 루트에서 `.env.example` 을 `.env` 로 복사하고,
+  - PROJECT_NAME: 현재 폴더명
+  - PROJECT_ROOT: 현재 루트 절대 경로
+  - LOG_PATH: OS 별 기본 추천 경로
+  로 자동 치환한다.
+- (선택) `.env` 를 `_environment` 파일로 복사한다.
 """
+
+from __future__ import annotations
 
 import platform
 import re
 import shutil
 from pathlib import Path
 
-os_name = platform.system()
-print(f"[setup_env] 운영체제: {os_name}")
 
-ROOT = Path.cwd()
-CUR_DIR_NAME = ROOT.name
-src = ROOT / ".env.example"
-dst = ROOT / ".env"
-env_file = ROOT / "_environment"
+def main() -> int:
+    """setup_env 스크립트 엔트리 포인트. 성공 시 0, 실패 시 1."""
+    os_name = platform.system()
+    print(f"[setup_env] 운영체제: {os_name}")
 
-if not src.is_file():
-    print(f"[setup_env] .env.example 파일이 없습니다. 경로: {src}")
-    exit(1)
+    root = Path.cwd()
+    cur_dir_name = root.name
+    src = root / ".env.example"
+    dst = root / ".env"
+    env_file = root / "_environment"
 
-shutil.copyfile(src, dst)
+    if not src.is_file():
+        print(f"[setup_env] .env.example 파일이 없습니다. 경로: {src}")
+        return 1
 
-content = dst.read_text(encoding="utf-8")
-content = re.sub(r"^PROJECT_NAME=.*", f"PROJECT_NAME={CUR_DIR_NAME}", content, flags=re.MULTILINE)
-abs_path = str(ROOT)
-content = re.sub(r"^PROJECT_ROOT=.*", f"PROJECT_ROOT={abs_path.replace('\\', r'\\\\')}", content, flags=re.MULTILINE)
+    shutil.copyfile(src, dst)
 
-if os_name == "Linux":
-    log_path = "/var/log/{PROJECT_NAME}"
-elif os_name == "Darwin":
-    log_path = "$HOME/Library/Logs/{PROJECT_NAME}"
-elif os_name == "Windows":
-    log_path = "%USERPROFILE%\\AppData\\Local\\{PROJECT_NAME}"
-else:
-    log_path = "/var/log/{PROJECT_NAME}"
-content = re.sub(r"^LOG_PATH=.*", f"LOG_PATH={log_path.replace('\\', r'\\\\')}", content, flags=re.MULTILINE)
+    content = dst.read_text(encoding="utf-8")
 
-dst.write_text(content, encoding="utf-8")
-print("[setup_env] .env 파일이 생성되고, 경로 및 프로젝트명이 현재 폴더명으로 자동 치환되었습니다.")
+    # PROJECT_NAME = 현재 폴더명
+    content = re.sub(
+        r"^PROJECT_NAME=.*",
+        f"PROJECT_NAME={cur_dir_name}",
+        content,
+        flags=re.MULTILINE,
+    )
 
-try:
-    shutil.copyfile(dst, env_file)
-    print("[setup_env] _environment 파일이 .env로부터 복사 생성되었습니다.")
-except Exception as e:
-    print(f"[setup_env] _environment 복사 실패: {e}")
+    # PROJECT_ROOT = 현재 루트 절대 경로 (백슬래시는 이스케이프)
+    abs_path = str(root)
+    content = re.sub(
+        r"^PROJECT_ROOT=.*",
+        f"PROJECT_ROOT={abs_path.replace('\\', r'\\\\')}",
+        content,
+        flags=re.MULTILINE,
+    )
+
+    # OS 별 기본 LOG_PATH 추천값 설정 (dev 기본은 사용자 쓰기 가능한 경로)
+    if os_name == "Linux":
+        # 개발 환경 기본값: $HOME/logs/{PROJECT_NAME}
+        log_path = "$HOME/logs/{PROJECT_NAME}"
+    elif os_name == "Darwin":
+        log_path = "$HOME/Library/Logs/{PROJECT_NAME}"
+    elif os_name == "Windows":
+        log_path = "%USERPROFILE%\\AppData\\Local\\{PROJECT_NAME}"
+    else:
+        log_path = "$HOME/logs/{PROJECT_NAME}"
+
+    content = re.sub(
+        r"^LOG_PATH=.*",
+        f"LOG_PATH={log_path.replace('\\', r'\\\\')}",
+        content,
+        flags=re.MULTILINE,
+    )
+
+    dst.write_text(content, encoding="utf-8")
+    print("[setup_env] .env 파일이 생성되고, 경로 및 프로젝트명이 현재 폴더명으로 자동 치환되었습니다.")
+
+    # _environment 파일 복사 (실패해도 치명적이지 않음)
+    try:
+        shutil.copyfile(dst, env_file)
+        print("[setup_env] _environment 파일이 .env로부터 복사 생성되었습니다.")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[setup_env] _environment 복사 실패: {exc}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+

@@ -71,3 +71,4 @@ def test_resolve_log_path_windows_userprofile() -> None:
 def test_resolve_log_path_project_name_default() -> None:
     """project_name이 빈 문자열이면 default로 치환된다."""
     assert resolve_log_path_from_env("/var/log/{PROJECT_NAME}", "", "Linux") == "/var/log/default"
+

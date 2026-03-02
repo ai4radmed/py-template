@@ -1,25 +1,23 @@
 """
-파일명: tests/unit/test_excel_io.py
-목적: read_excels 함수의 동작을 단위 테스트로 검증
-주요 기능:
-- 임시 폴더에 엑셀 파일을 생성하고, read_excels가 올바른 DataFrame 딕셔너리를 반환하는지 확인
-변경이력:
-  - 2025-09-24: 최초 생성 (BenKorea)
-  - 2026-02-28: GS/ISMS-P 테스트 마커 추가 (AI Agent)
+adapters.excel_io.read_excels 함수 테스트.
 """
 
-import tempfile
+from __future__ import annotations
+
 from pathlib import Path
 
-import pandas as pd
 import pytest
 
-from adapters.excel_io import read_excels
+pytest.importorskip("pandas")
+
+import pandas as pd  # noqa: E402
+from adapters.excel_io import read_excels  # noqa: E402
 
 
 @pytest.mark.gs_req("GS-07")  # 기능의 정확성
 @pytest.mark.isms("ISMS-2.7-47")  # 보안 설계 및 구현(시험 가능 구조와 연계)
-def test_read_excels(tmp_path):
+def test_read_excels(tmp_path: Path) -> None:
+    """임시 디렉터리에 생성한 엑셀 파일들을 read_excels 가 올바르게 읽는지 검증."""
     # 임시 엑셀 파일 생성
     df1 = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
     df2 = pd.DataFrame({"x": [10, 20], "y": [30, 40]})
@@ -37,9 +35,3 @@ def test_read_excels(tmp_path):
     pd.testing.assert_frame_equal(result["test1.xlsx"], df1)
     pd.testing.assert_frame_equal(result["test2.xls"], df2)
 
-
-if __name__ == "__main__":
-    import tempfile
-
-    test_read_excels(Path(tempfile.mkdtemp()))
-    print("테스트 통과!")
