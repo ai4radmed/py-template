@@ -229,6 +229,7 @@ def log_debug(msg: str) -> None:
 
 
 def log_info(msg: str) -> None:
+    """메시지를 INFO 레벨로 프로젝트 기본 로거에 기록한다."""
     get_logger().info(msg)
 
 
