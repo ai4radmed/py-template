@@ -60,6 +60,37 @@ jobs:
       - name: "Run tests with coverage and reports (CI: local_only 제외)"
         run: uv run pytest -m "not local_only" --html=reports/test_report.html --self-contained-html --cov=src --cov-report=html:reports/coverage --cov-report=xml:reports/coverage.xml --alluredir=reports/allure-results --junitxml=reports/junit.xml -v
 
+  # ── AI Agentic Reviewer (ARCHITECTURE.md 7.4절 구현) ──
+  ai_review:
+    needs: lint
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # git diff를 위해 전체 히스토리 가져오기
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: AI Spec Review
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_BASE_REF: ${{ github.base_ref || 'main' }}
+        run: |
+          # API 키가 없으면 경고만 하고 성공 처리(일단은 선택적 도입)
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "[WARNING] GEMINI_API_KEY is not set. Skipping AI Review."
+          else
+            uv run python scripts/ai_reviewer.py
+          fi
+
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
