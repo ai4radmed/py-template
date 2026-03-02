@@ -88,7 +88,7 @@ def execute_many(query: str, data_list: list[object]) -> int:
         cur.executemany(query, data_list)
 
         conn.commit()
-        affected_rows = cur.rowcount
+        affected_rows = int(cur.rowcount)
         cur.close()
         conn.close()
 
