@@ -60,6 +60,14 @@ jobs:
       - name: "Run tests with coverage and reports (CI: local_only 제외)"
         run: uv run pytest -m "not local_only" --html=reports/test_report.html --self-contained-html --cov=src --cov-report=html:reports/coverage --cov-report=xml:reports/coverage.xml --alluredir=reports/allure-results --junitxml=reports/junit.xml -v
 
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ matrix.os }}
+          path: reports/
+          retention-days: 30
+
   # ── AI Agentic Reviewer (ARCHITECTURE.md 7.4절 구현) ──
   ai_review:
     needs: lint
@@ -90,11 +98,3 @@ jobs:
           else
             uv run python scripts/ai_reviewer.py
           fi
-
-      - name: Upload test reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-reports-${{ matrix.os }}
-          path: reports/
-          retention-days: 30
