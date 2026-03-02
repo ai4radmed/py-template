@@ -37,4 +37,3 @@ def get_cipher(alphabet_type: str = "alphanumeric") -> FF3Cipher:
         raise RuntimeError(msg)
 
     return FF3Cipher.withCustomAlphabet(key, tweak, alphabet)
-

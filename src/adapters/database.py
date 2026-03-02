@@ -100,4 +100,3 @@ def execute_many(query: str, data_list: list[object]) -> int:
             conn.rollback()
             conn.close()
         raise
-

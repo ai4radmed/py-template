@@ -184,4 +184,3 @@ def test_execute_many_returns_rowcount_and_rollback_on_error(monkeypatch: pytest
     assert conn_fail.rolled_back is True
     assert conn_fail.closed is True
     assert any("배치 실행 오류" in msg for msg in error_logged)
-

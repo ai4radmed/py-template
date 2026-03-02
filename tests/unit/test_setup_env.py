@@ -19,10 +19,7 @@ import setup_env as _mod  # noqa: E402
 def _write_env_example(path: Path) -> None:
     """테스트용 .env.example 파일 생성."""
     path.write_text(
-        "PROJECT_NAME=example\n"
-        "PROJECT_ROOT=/tmp/example\n"
-        "LOG_PATH=/tmp/logs\n"
-        "OTHER_KEY=keep\n",
+        "PROJECT_NAME=example\nPROJECT_ROOT=/tmp/example\nLOG_PATH=/tmp/logs\nOTHER_KEY=keep\n",
         encoding="utf-8",
     )
 
@@ -70,4 +67,3 @@ def test_setup_env_missing_example_returns_error(tmp_path: Path) -> None:
 
     assert exit_code == 1
     assert not (tmp_path / ".env").exists()
-

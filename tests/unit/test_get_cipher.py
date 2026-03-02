@@ -82,4 +82,3 @@ def test_get_cipher_missing_env_raises(monkeypatch: pytest.MonkeyPatch) -> None:
     msg = str(exc_info.value)
     assert "필수 환경변수(FF3_KEY, FF3_TWEAK, FF3_ALPHANUMERIC, FF3_NUMERIC)가 누락되었습니다." in msg
     assert any("필수 환경변수" in m for m in logged)
-

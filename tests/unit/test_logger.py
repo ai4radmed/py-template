@@ -87,4 +87,3 @@ def test_assert_audit_is_file_only_rejects_propagate_true() -> None:
 
     with pytest.raises(RuntimeError):
         _assert_audit_is_file_only(config)
-

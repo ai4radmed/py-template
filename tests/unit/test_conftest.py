@@ -10,9 +10,7 @@ from dataclasses import dataclass, field
 import conftest as conftest_module
 
 EXPECTED_GS_MARKER = "gs_req(id): GS 체크리스트 항목 ID. 예: GS-24, GS-31"
-EXPECTED_ISMS_MARKER = (
-    "isms(id): ISMS-P 체크리스트 항목 ID를 명시합니다. 예: ISMS-2.8-54"
-)
+EXPECTED_ISMS_MARKER = "isms(id): ISMS-P 체크리스트 항목 ID를 명시합니다. 예: ISMS-2.8-54"
 
 
 @dataclass
@@ -37,9 +35,7 @@ def test_gs_req_marker_registered() -> None:
     conftest_module.pytest_configure(config)  # type: ignore[arg-type]
 
     markers = config.marker_lines()
-    assert (
-        EXPECTED_GS_MARKER in markers
-    ), f"gs_req 마커 정의가 markers 설정에 없습니다: {markers!r}"
+    assert EXPECTED_GS_MARKER in markers, f"gs_req 마커 정의가 markers 설정에 없습니다: {markers!r}"
 
 
 def test_isms_marker_registered() -> None:
@@ -49,7 +45,4 @@ def test_isms_marker_registered() -> None:
     conftest_module.pytest_configure(config)  # type: ignore[arg-type]
 
     markers = config.marker_lines()
-    assert (
-        EXPECTED_ISMS_MARKER in markers
-    ), f"isms 마커 정의가 markers 설정에 없습니다: {markers!r}"
-
+    assert EXPECTED_ISMS_MARKER in markers, f"isms 마커 정의가 markers 설정에 없습니다: {markers!r}"

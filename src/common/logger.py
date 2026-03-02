@@ -242,4 +242,3 @@ def log_error(msg: str) -> None:
 
 def log_critical(msg: str) -> None:
     get_logger().critical(msg)
-

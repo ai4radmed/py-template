@@ -59,4 +59,3 @@ def test_load_config_missing_file_raises(monkeypatch: pytest.MonkeyPatch, tmp_pa
 
     with pytest.raises(FileNotFoundError):
         load_config(str(missing_path))
-

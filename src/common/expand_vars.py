@@ -40,4 +40,3 @@ def expand_vars(value: str | dict | list | Any) -> str | dict | list | Any:
     if isinstance(value, list):
         return [expand_vars(item) for item in value]
     return value
-

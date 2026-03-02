@@ -63,4 +63,3 @@ def load_config(yml_path: str = "config/deidentification.yml", section: str | No
     except Exception as exc:  # noqa: BLE001
         log_error(f"[load_config] Unexpected error loading {yml_path}: {exc}")
         raise
-
