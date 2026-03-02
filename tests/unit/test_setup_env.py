@@ -7,8 +7,6 @@ import os
 import sys
 from pathlib import Path
 
-import pytest
-
 # scripts/setup 모듈 로드
 _project_root = Path(__file__).resolve().parents[2]
 _setup_dir = _project_root / "scripts" / "setup"

@@ -4,7 +4,6 @@ YAML 설정 로더(load_config) 테스트.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest

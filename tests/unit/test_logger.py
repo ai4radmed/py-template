@@ -4,7 +4,6 @@ common.logger 모듈의 핵심 정책 함수 테스트.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest

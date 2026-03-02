@@ -11,6 +11,7 @@ import pytest
 pytest.importorskip("pandas")
 
 import pandas as pd  # noqa: E402
+
 from adapters.excel_io import read_excels  # noqa: E402
 
 
@@ -34,4 +35,3 @@ def test_read_excels(tmp_path: Path) -> None:
     assert "test2.xls" in result
     pd.testing.assert_frame_equal(result["test1.xlsx"], df1)
     pd.testing.assert_frame_equal(result["test2.xls"], df2)
-

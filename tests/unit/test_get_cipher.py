@@ -4,8 +4,6 @@ adapters.get_cipher.get_cipher 함수 테스트.
 
 from __future__ import annotations
 
-import os
-
 import pytest
 
 pytest.importorskip("ff3")

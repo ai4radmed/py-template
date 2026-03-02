@@ -11,14 +11,13 @@ from __future__ import annotations
 import inspect
 import os
 from pathlib import Path
-from typing import Dict
 
 import pandas as pd
 
 from common.logger import log_debug, log_error, log_info
 
 
-def read_excels(input_dir: str) -> Dict[str, pd.DataFrame]:
+def read_excels(input_dir: str) -> dict[str, pd.DataFrame]:
     """
     input_dir 하위의 .xls/.xlsx 파일을 재귀적으로 읽어 딕셔너리로 반환한다.
 
@@ -26,7 +25,7 @@ def read_excels(input_dir: str) -> Dict[str, pd.DataFrame]:
         {파일명(str): pandas.DataFrame}
     """
     excel_files = Path(input_dir).rglob("*.xls*")
-    dfs: Dict[str, pd.DataFrame] = {}
+    dfs: dict[str, pd.DataFrame] = {}
     for file in excel_files:
         try:
             df = pd.read_excel(file)
@@ -39,7 +38,7 @@ def read_excels(input_dir: str) -> Dict[str, pd.DataFrame]:
     return dfs
 
 
-def save_excels(output_dir: str, dataframes_dict: Dict[str, pd.DataFrame], prefix: str | None = None) -> None:
+def save_excels(output_dir: str, dataframes_dict: dict[str, pd.DataFrame], prefix: str | None = None) -> None:
     """
     데이터프레임 딕셔너리를 지정된 디렉토리에 엑셀 파일로 저장하는 함수.
 
@@ -102,4 +101,3 @@ def save_excels(output_dir: str, dataframes_dict: Dict[str, pd.DataFrame], prefi
 
     # 결과 요약
     log_info(f"[save_excels] 저장 완료: {saved_count}개, 실패: {failed_count}개")
-
