@@ -40,16 +40,16 @@ def main() -> int:
     # PROJECT_NAME = 현재 폴더명
     content = re.sub(
         r"^PROJECT_NAME=.*",
-        f"PROJECT_NAME={cur_dir_name}",
+        lambda _: f"PROJECT_NAME={cur_dir_name}",
         content,
         flags=re.MULTILINE,
     )
 
-    # PROJECT_ROOT = 현재 루트 절대 경로 (백슬래시는 이스케이프)
+    # PROJECT_ROOT = 현재 루트 절대 경로
     abs_path = str(root)
     content = re.sub(
         r"^PROJECT_ROOT=.*",
-        f"PROJECT_ROOT={abs_path.replace('\\', r'\\\\')}",
+        lambda _: f"PROJECT_ROOT={abs_path}",
         content,
         flags=re.MULTILINE,
     )
@@ -67,7 +67,7 @@ def main() -> int:
 
     content = re.sub(
         r"^LOG_PATH=.*",
-        f"LOG_PATH={log_path.replace('\\', r'\\\\')}",
+        lambda _: f"LOG_PATH={log_path}",
         content,
         flags=re.MULTILINE,
     )
