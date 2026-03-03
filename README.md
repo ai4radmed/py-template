@@ -1,6 +1,6 @@
 # py-template
 
-Python 전용 프로젝트들을 위한 공용 템플릿으로 사용하고자 이 프로젝트를 만들었습니다.
+이 프로젝트는 **의료 정보(Medical Information)를 다루는 파이썬(Python) 프로젝트에 적합한 로깅 시스템**을 기본으로 구현해 둔 공용 템플릿입니다. 의료 데이터의 특수성(보안, 감사 추적 등)을 충족하기 위한 정책과 인프라 구조를 내장하고 있습니다.
 
 ## AI Native Spec-Driven Development (AI 주도 명세 기반 개발)
 
@@ -17,26 +17,26 @@ graph TD
     classDef ci fill:#e3f2fd,stroke:#90caf9,stroke-width:2px,color:#0d47a1;
     classDef state fill:#fff3e0,stroke:#ffb74d,stroke-width:2px,color:#e65100;
 
-    A(["시작: 사용자 프롬프트<br/>프로젝트 개요 주입"]):::state -->|Web Browser Agent| B["아키텍처 설계"]:::ai
-    B -->|Antigravity Gemini| C["<code>.spec/</code> 초기 설정 및<br/>명세 파일 생성"]:::ai
+    A([시작: 사용자 프롬프트 프로젝트 개요 주입]):::state -->|Web Browser Agent| B[아키텍처 설계]:::ai
+    B -->|Antigravity Gemini| C[.spec/ 초기 설정 및 명세 파일 생성]:::ai
     
-    C -->|Cursor IDE| D{"명세 파일 기반<br/>수정 및 완성"}:::cursor
-    D --> E["1:1 매칭 구현 소스코드 생성"]:::cursor
-    E --> F["테스트 명세 및 pytest 코드 생성"]:::cursor
-    F --> G{"로컬 테스트(pytest) 통과?"}:::cursor
+    C -->|Cursor IDE| D{명세 파일 기반 수정 및 완성}:::cursor
+    D --> E[1:1 매칭 구현 소스코드 생성]:::cursor
+    E --> F[테스트 명세 및 pytest 코드 생성]:::cursor
+    F --> G{로컬 테스트 통과?}:::cursor
     
-    G -- No (오류 시 명세부터 수정) --> D
-    G -- Yes (구현 완료로 간주) --> H["GitHub CI 자동화 파이프라인 푸시"]:::ci
+    G -- No --> D
+    G -- Yes --> H[GitHub CI 자동화 파이프라인 푸시]:::ci
     
-    H --> I["Lint 및 전체 테스트 실행"]:::ci
-    I --> J{"CI 검증 통과?"}:::ci
+    H --> I[Lint 및 전체 테스트 실행]:::ci
+    I --> J{CI 검증 통과?}:::ci
     
     J -- No --> D
-    J -- Yes --> K["AI Code Review Action<br/>Gemini 교차검증"]:::ai
+    J -- Yes --> K[AI Code Review Action Gemini 교차검증]:::ai
     
-    K --> L{"명세-구현 완전 일치 확인?"}:::ai
-    L -- No (AI 검증 실패 시) --> D
-    L -- Yes --> M(["구현 완료 및<br/>최종 배포"]):::state
+    K --> L{명세-구현 완전 일치 확인?}:::ai
+    L -- No --> D
+    L -- Yes --> M([구현 완료 및 최종 배포]):::state
 ```
 
 1. **AI 기획 및 설계 (AI Planning)**: 사용자 프롬프트를 바탕으로 Web Browser 에이전트를 활용해 구체적인 아키텍처를 우선 설계합니다. 이후 안티그래비티(Gemini) 에이전트에게 설계된 아키텍처를 전달하여 `.spec/` 디렉터리 하위의 구조와 초안 명세 파일들을 생성합니다. (이때 Gemini에게 주입하는 프롬프트 예시는 [`documents/AI_NATIVE_ARCHITECTURE_PROMPTS.md`](./documents/AI_NATIVE_ARCHITECTURE_PROMPTS.md)의 `# AI-Native Spec-Driven 아키텍처 초안 프롬프트 (py-template 전용)` 섹션을 참고하세요.)
