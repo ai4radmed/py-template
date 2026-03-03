@@ -2,6 +2,49 @@
 
 Python 전용 프로젝트들을 위한 공용 템플릿으로 사용하고자 이 프로젝트를 만들었습니다.
 
+## AI Native Spec-Driven Development (AI 주도 명세 기반 개발)
+
+본 프로젝트는 기획부터 배포까지 AI 에이전트와의 적극적인 협업을 통해 높은 품질과 생산성을 보장하는 **AI Native Spec-Driven Development** 워크플로우를 채택하고 있습니다. 명세(`.spec/`)를 중심으로 구현과 검증이 순환하는 자동화된 파이프라인이 매력적인 개발 경험을 제공합니다.
+
+### 개발 워크플로우
+
+이 템플릿 기반의 프로젝트는 다음과 같은 강력한 AI 검증 루프를 따릅니다:
+
+```mermaid
+graph TD
+    classDef ai fill:#f3e5f5,stroke:#ce93d8,stroke-width:2px,color:#4a148c;
+    classDef cursor fill:#e8f5e9,stroke:#81c784,stroke-width:2px,color:#1b5e20;
+    classDef ci fill:#e3f2fd,stroke:#90caf9,stroke-width:2px,color:#0d47a1;
+    classDef state fill:#fff3e0,stroke:#ffb74d,stroke-width:2px,color:#e65100;
+
+    A([시작: 사용자 프롬프트<br/>프로젝트 개요 주입]):::state -->|Web Browser Agent| B[아키텍처 설계]:::ai
+    B -->|Antigravity Gemini| C[<code>.spec/</code> 초기 설정 및<br/>명세 파일 생성]:::ai
+    
+    C -->|Cursor IDE| D{명세 파일 기반<br/>수정 및 완성}:::cursor
+    D --> E[1:1 매칭 구현 소스코드 생성]:::cursor
+    E --> F[테스트 명세 및 pytest 코드 생성]:::cursor
+    F --> G{"로컬 테스트(pytest) 통과?"}:::cursor
+    
+    G -- No (오류 시 명세부터 수정) --> D
+    G -- Yes (구현 완료로 간주) --> H[GitHub CI 자동화 파이프라인 푸시]:::ci
+    
+    H --> I[Lint 및 전체 테스트 실행]:::ci
+    I --> J{CI 검증 통과?}:::ci
+    
+    J -- No --> D
+    J -- Yes --> K[AI Code Review Action<br/>Gemini 교차검증]:::ai
+    
+    K --> L{명세-구현 완전 일치 확인?}:::ai
+    L -- No (AI 검증 실패 시) --> D
+    L -- Yes --> M([구현 완료 및<br/>최종 배포]):::state
+```
+
+1. **AI 기획 및 설계 (AI Planning)**: 사용자 프롬프트를 바탕으로 Web Browser 에이전트를 활용해 구체적인 아키텍처를 우선 설계합니다. 이후 안티그래비티(Gemini) 에이전트에게 설계된 아키텍처를 전달하여 `.spec/` 디렉터리 하위의 구조와 초안 명세 파일들을 생성합니다. (이때 Gemini에게 주입하는 프롬프트 예시는 [`documents/AI_NATIVE_ARCHITECTURE_PROMPTS.md`](./documents/AI_NATIVE_ARCHITECTURE_PROMPTS.md)의 `# AI-Native Spec-Driven 아키텍처 초안 프롬프트 (py-template 전용)` 섹션을 참고하세요.)
+2. **명세 주도 개발 (Spec-Driven with Cursor)**: 파생된 명세 파일을 Cursor IDE에 전달하여 사용자와 AI가 명세의 디테일을 완성합니다. 완성된 명세를 바탕으로 1:1로 매칭되는 실행 파일을 생성한 뒤, 이 실행 파일을 기반으로 pytest를 위한 테스트 명세 및 실제 테스트 코드를 작성합니다. 테스트를 통과해야만 명세에 대한 구현 파일이 올바르게 만들어진 것으로 간주합니다.
+3. **CI 검증 & AI 교차 리뷰 (CI & AI Review)**: 모든 실행 파일 개발이 완료되어 GitHub에 코드가 푸시되면, CI 파이프라인에서 Lint 등 가능한 모든 테스트가 진행됩니다. 테스트 도중 오류가 발견되면 **해당 명세 파일부터 찾아 추적 & 수정**하여 전체 사이클을 다시 반복합니다. 모든 CI 테스트를 통과하면 마지막으로 **CI Action Workflow 내의 AI Review(Gemini 모델 지정)** 동작을 통해 명세와 실행 파일이 애초의 계획과 의도대로 정확히 짝지어 작성되었는지 교차 검증을 수행합니다.
+
+---
+
 ## 포함된 기능
 
 ### 환경 및 구조
@@ -94,7 +137,7 @@ irm get.scoop.sh | iex
 
 ### 3. Python 버전 관리
 **시스템에 Python을 따로 설치할 필요가 없습니다.**
-본 템플릿의 `make venv` 명령을 실행하면, **`uv`가 `pyproject.toml`에 명시된 버전(3.12+)을 자동으로 다운로드**하여 프로젝트 전용 가상환경(`.venv`)을 구성합니다.
+본 프로젝트에서 `uv sync` 등의 명령을 실행하면, **`uv`가 `pyproject.toml`에 명시된 요구 버전에 맞는 Python을 자동으로 다운로드**하여 프로젝트 전용 가상환경(`.venv`)을 구성합니다.
 
 ## 빠른 시작
 
@@ -130,12 +173,15 @@ irm get.scoop.sh | iex
 
 ## Makefile 타깃
 
+현재 `Makefile`은 `uv run` 기반의 복잡한 명령어를 래핑하여 개발 편의성을 높이기 위한 유틸리티로 제공됩니다.
+
 | 타깃 | 설명 |
 |------|------|
-| `env` | `.env` 기반 환경 변수 초기화 |
-| `logs` | 로그 디렉터리 생성·권한 설정 |
-| `setup` | env + logs 일괄 실행 |
-| `test` | pytest 실행 |
+| `env` | `.env` 기반 환경 변수 복사 및 자동 구성 (`scripts/setup/setup_env.py`) |
+| `logs` | OS 환경에 맞는 로그 디렉터리 자동 생성 (`scripts/setup/setup_log_dir.py`) |
+| `setup` | `env` + `logs` 일괄 실행 |
+| `test` | 로컬 환경 전체 테스트 실행 (`local_only` 마커 포함) |
+| `test-fast` | CI 환경 기준 빠른 테스트 실행 (`local_only` 제외) |
 | `lint` | ruff 린트 검사 |
 | `format` | ruff 자동 포매팅 |
 | `typecheck` | mypy 타입 검사 |
